@@ -1,43 +1,56 @@
 # Degamo, Katlyn H. Bs Statistics - II
-# Simple Student Information System (SSIS)
+# Simple Student Information System (SSIS) using csv
 
+from typing import List
 import tkinter as tk
 import csv
 
-file_path = 'students.csv'  # Replace with the desired file path
+students_file_path = 'students.csv'  # Replace with the desired file path
 
-# Create an empty CSV file
-with open(file_path, 'w', newline='') as file:
-    writer = csv.writer(file)
-    writer.writerow([])
+# Create an empty CSV file for students
+with open(students_file_path, 'w', newline='', encoding='utf-8'):
+    pass
 
-file_path = 'courses.csv'  # Replace with the desired file path
+courses_file_path = 'courses.csv'  # Replace with the desired file path
 
-# Create an empty CSV file
-with open(file_path, 'w', newline='') as file:
-    writer = csv.writer(file)
-    writer.writerow([])
+# Create an empty CSV file for courses
+with open(courses_file_path, 'w', newline='', encoding='utf-8'):
+    pass
 
 root = tk.Tk()
 root.title("Student Information System")
 root.config(bg="green")
 root.geometry("600x350")
 
-students = []
-courses = []
+students: List[dict] = []
+courses: List[dict] = []
 
 def add_student():
     student_id = id_entry.get()
-    name = name_entry.get()
+    student_name = name_entry_student.get()
     gender = gender_entry.get()
     year_level = year_entry.get()
     course_code = course_entry.get()
 
-    student = {'ID': student_id, 'Name': name, 'Gender': gender, 'Year Level': year_level, 'Course Code': course_code}
+    # Check if the course exists in the courses data
+    course_exists = False
+    for course in courses:
+        if course['Course Code'] == course_code:
+            course_exists = True
+            break
+    
+    if not course_exists:
+        # Display an error message if the course does not exist
+        error_message = "Course does not exist."
+        dataoutput.delete('1.0', tk.END)
+        dataoutput.insert(tk.END, error_message)
+        return
+
+    student = {'ID': student_id, 'Name': student_name, 'Gender': gender, 'Year Level': year_level, 'Course Code': course_code}
     students.append(student)
 
     id_entry.delete(0, tk.END)
-    name_entry.delete(0, tk.END)
+    name_entry_student.delete(0, tk.END)
     gender_entry.delete(0, tk.END)
     year_entry.delete(0, tk.END)
     course_entry.delete(0, tk.END)
@@ -47,7 +60,8 @@ def add_student():
 
 def delete_student():
     student_id = id_entry.get()
-    for student in students:
+    students_copy = students.copy()
+    for student in students_copy:
         if student['ID'] == student_id:
             students.remove(student)
             break
@@ -60,13 +74,13 @@ def edit_student():
     student_id = id_entry.get()
     for student in students:
         if student['ID'] == student_id:
-            student['Name'] = name_entry.get()
+            student['Name'] = name_entry_student.get()
             student['Gender'] = gender_entry.get()
             student['Year Level'] = year_entry.get()
             student['Course Code'] = course_entry.get()
             break
     id_entry.delete(0, tk.END)
-    name_entry.delete(0, tk.END)
+    name_entry_student.delete(0, tk.END)
     gender_entry.delete(0, tk.END)
     year_entry.delete(0, tk.END)
     course_entry.delete(0, tk.END)
@@ -80,11 +94,11 @@ def list_students():
     dataoutput.tag_configure('center', justify='center')
     for student in students:
         student_id = student["ID"]
-        name = student["Name"]
+        student_name = student["Name"]
         gender = student["Gender"]
         year_level = student["Year Level"]
         course_code = student["Course Code"]
-        dataoutput.insert(tk.END, f"ID: {student_id}, Name: {name}, Gender: {gender}, Year Level: {year_level}, "
+        dataoutput.insert(tk.END, f"ID: {student_id}, Name: {student_name}, Gender: {gender}, Year Level: {year_level}, "
                                  f"Course Code: {course_code}\n")
 
 
@@ -95,12 +109,12 @@ def search_students():
     dataoutput.tag_configure('center', justify='center')
     for student in students:
         student_id = student["ID"]
-        name = student["Name"]
+        student_name = student["Name"]
         gender = student["Gender"]
         year_level = student["Year Level"]
         course_code = student["Course Code"]
-        if query.lower() in student_id.lower() or query.lower() in name.lower():
-            dataoutput.insert(tk.END, f"ID: {student_id}, Name: {name}, Gender: {gender}, Year Level: {year_level}, "
+        if query.lower() in student_id.lower() or query.lower() in student_name.lower():
+            dataoutput.insert(tk.END, f"ID: {student_id}, Name: {student_name}, Gender: {gender}, Year Level: {year_level}, "
                                  f"Course Code: {course_code}\n")
 
 
@@ -111,7 +125,7 @@ def add_course():
     course = {'Course Code': course_code, 'Course Name': course_name}
     courses.append(course)
 
-    course_entry.delete(0, tk.END)
+    code_entry.delete(0, tk.END)
     name_entry.delete(0, tk.END)
     list_courses()  # Refresh the displayed course list
 
@@ -120,7 +134,8 @@ def add_course():
 
 def delete_course():
     course_code = course_entry.get()
-    for course in courses:
+    courses_copy = courses.copy()
+    for course in courses_copy:
         if course['Course Code'] == course_code:
             courses.remove(course)
             break
@@ -132,9 +147,10 @@ def delete_course():
 def edit_course():
     course_code = course_entry.get()
     course_name = name_entry.get()
-    for course in courses:
+    courses_copy = courses.copy()
+    for course in courses_copy:
         if course['Course Code'] == course_code:
-            course['Course Name'] = course_entry.get()
+            course['Course Name'] = course_name
             break
     course_entry.delete(0, tk.END)
     name_entry.delete(0, tk.END)
@@ -154,7 +170,7 @@ def list_courses():
 
 
 def save_students_to_csv():
-    with open(file_path, 'w', newline='') as file:
+    with open(students_file_path, 'w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow(['ID', 'Name', 'Gender', 'Year Level', 'Course Code'])
         for student in students:
@@ -163,7 +179,7 @@ def save_students_to_csv():
 
 
 def save_courses_to_csv():
-    with open(file_path, 'w', newline='') as file:
+    with open(courses_file_path, 'w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow(['Course Code', 'Course Name'])
         for course in courses:
@@ -171,17 +187,29 @@ def save_courses_to_csv():
 
 
 def load_students_from_csv():
-    with open(file_path, 'r') as file:
+    with open(students_file_path, 'r', newline='', encoding='utf-8') as file:
         reader = csv.DictReader(file)
+        students.clear()  # Clear the existing student data
         for row in reader:
-            students.append(row)
-
+            student = {
+                'ID': row['ID'],
+                'Name': row['Name'],
+                'Gender': row['Gender'],
+                'Year Level': row['Year Level'],
+                'Course Code': row['Course Code']
+            }
+            students.append(student)
 
 def load_courses_from_csv():
-    with open(file_path, 'r') as file:
+    with open(courses_file_path, 'r', newline='', encoding='utf-8') as file:
         reader = csv.DictReader(file)
+        courses.clear()  # Clear the existing course data
         for row in reader:
-            courses.append(row)
+            course = {
+                'Course Code': row['Course Code'],
+                'Course Name': row['Course Name']
+            }
+            courses.append(course)
 
 def clear_data():
     dataoutput.delete('1.0', tk.END)
@@ -208,11 +236,11 @@ id_label.grid(row=1, column=0, padx=10, pady=5, sticky="e")
 id_entry = tk.Entry(root, bd=2, font=("Arial", 12), bg=entry_bg_color)
 id_entry.grid(row=1, column=1, padx=10, pady=5, sticky="w")
 
-name_label = tk.Label(root, text="Name", font=("Arial", 12, "bold"), bg=bg_color, fg=fg_color)
-name_label.grid(row=2, column=0, padx=10, pady=5, sticky="e")
+student_name_label = tk.Label(root, text="Name", font=("Arial", 12, "bold"), bg=bg_color, fg=fg_color)
+student_name_label.grid(row=2, column=0, padx=10, pady=5, sticky="e")
 
-name_entry = tk.Entry(root, bd=2, font=("Arial", 12), bg=entry_bg_color)
-name_entry.grid(row=2, column=1, padx=10, pady=5, sticky="w")
+name_entry_student = tk.Entry(root, bd=2, font=("Arial", 12), bg=entry_bg_color)
+name_entry_student.grid(row=2, column=1, padx=10, pady=5, sticky="w")
 
 gender_label = tk.Label(root, text="Gender", font=("Arial", 12, "bold"), bg=bg_color, fg=fg_color)
 gender_label.grid(row=3, column=0, padx=10, pady=5, sticky="e")
@@ -266,7 +294,7 @@ delete_course_button.grid(row=11, column=1, padx=10, pady=10)
 edit_course_button = tk.Button(root, text="Edit", font=("Arial", 12, "bold"), bg=button_bg_color, fg=button_fg_color, bd=2, command=edit_course)
 edit_course_button.grid(row=11, column=2, padx=10, pady=10)
 
-list_courses_button = tk.Button(root, text="List Courses", font=("Arial", 12), bg="white", bd=5, command=list_courses)
+list_courses_button = tk.Button(root, text="List Courses", font=("Arial", 12, "bold"), bg="white", bd=5, command=list_courses)
 list_courses_button.grid(row=3, column=3, padx=10, pady=10)
 
 # Data Section
@@ -286,9 +314,9 @@ list_button = tk.Button(root, text="List Students", font=("Arial", 12, "bold"), 
 list_button.grid(row=3, column=2, columnspan=2, padx=10, pady=5, sticky="w")
 
 dataoutput = tk.Text(root, height=10, width=50, font=("Arial", 12), bg=entry_bg_color)
-dataoutput.grid(row=4, column=2, columnspan=2, padx=10, pady=10)
+dataoutput.grid(row=4, column=2, columnspan=20, padx=20, pady=10)
 
-clear_data_btn = tk.Button(root, text="Clear Data", font=("Arial 10 bold"), bg="white", fg="black", command=clear_data)
+clear_data_btn = tk.Button(root, text="Clear Data", font=("Arial", 10, "bold"), bg=button_bg_color, fg=button_fg_color, bd=2, command=clear_data)
 clear_data_btn.place(x=530, y=400)
 
 root.mainloop()
